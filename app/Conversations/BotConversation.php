@@ -56,7 +56,7 @@ class BotConversation extends Conversation
 
     protected $click1;
 
-    protected $Responses;
+    protected $Responses = array();
 
     protected $Preguntas;
 
