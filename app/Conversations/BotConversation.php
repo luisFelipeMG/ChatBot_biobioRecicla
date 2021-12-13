@@ -11,6 +11,38 @@ use BotMan\BotMan\Messages\Conversations\Conversation;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
+class BotResponse{ // Can be a question
+    public $text;
+    public $buttons;    // nullable
+    public $save;       // true - false / Save history
+
+    function __construct(string $text, ?array $buttons = null, bool $save = false)
+    {
+        $this->text = $text;
+        $this->save = $save;
+        $this->buttons = $buttons;
+    }
+}
+
+class HumanResponse{
+    public $text;
+    public $usedButton; // nullable
+}
+
+class ChatButton{
+    public $text;
+    public $botResponse;
+
+    function __construct(string $text, BotResponse $botResponse)
+    {
+        $this->text = $text;
+        $this->botResponse = $botResponse;
+    }
+}
+
+class ChatReady{
+    public $ready = true;
+}
 
 class BotConversation extends Conversation
 {
@@ -67,9 +99,22 @@ class BotConversation extends Conversation
                 'mail'=> $this->email
             ]);
             $this->say('Gracias '.$this->firstname);
-            $this->hello();
+            $this->test();
         });
     }
+
+    public function test(){
+        $preguntaInicial = new BotResponse("Hola qué quiere saber?", [
+            new ChatButton("Deme un poco más de info", new BotResponse("Abueno aqui tiene un poco más de info, gracias")),
+            new ChatButton("Me puede preguntar algo más pls?", new BotResponse("Si por supuesto, qué quiere comer?",[
+                new ChatButton("Cazuela", new BotResponse("OK", null, true)),
+                new ChatButton("Empanada", new BotResponse("Dale", null, true))
+            ]))
+        ]);
+
+        $this->create_question($preguntaInicial, $preguntaInicial);
+    }
+
     /**
      * First question
      */
@@ -137,6 +182,47 @@ class BotConversation extends Conversation
                 }
             });
     }
+    
+
+    public function create_question(BotResponse $botResponse, BotResponse $rootResponse){
+        if($botResponse->buttons == null){
+            array_push($this->Responses, $botResponse->text);
+            $this->say($botResponse->text);
+            if($botResponse->save) $this->save_history();
+            $this->create_question($rootResponse, $rootResponse);
+            return;
+        }        
+
+        $question = Question::create($botResponse->text)//le preguntamos al usuario que quiere saber
+            ->fallback('Unable to ask question')
+            ->callbackId('ask_reason')
+            ->addButtons(array_map( function($value){ return Button::create($value->text)->value($value->text);}, $botResponse->buttons ));
+        array_push($this->Responses, $botResponse->text);
+
+        return $this->ask($question, function (Answer $answer) use ($botResponse, $rootResponse){
+            if ($answer->isInteractiveMessageReply()) {
+
+                $foundButtons = array_filter($botResponse->buttons, function($value, $key)  use($answer){
+                    return $value->text == $answer->getValue();
+                }, ARRAY_FILTER_USE_BOTH);
+
+                if(count($foundButtons) > 0){
+                    $foundButton = $foundButtons[0];
+
+                    array_push($foundButton->text);
+                    if($botResponse->save) $this->save_history();
+                    $this->create_question($foundButton->botResponse, $rootResponse);
+                }
+            }
+        });
+    }
+
+    public function save_history(){
+        $contactos = json_decode($this->contacto, true);
+        $array_merge = array_merge($this->Responses, $contactos);
+        $Responsejson = json_encode($array_merge);
+        Storage::disk('public')->put('history '.$this->contacto->id.'.json', $Responsejson);
+    }
 
     /*public function create_question($preguntita, $respuestita){
         $question = Question::create($preguntita)//le preguntamos al usuario que quiere saber
@@ -163,6 +249,68 @@ class BotConversation extends Conversation
                 }
             });
 
+            json:
+
+            {
+                "texto": "what is this?",
+                "buttons": [
+                    0: {
+                        "respuesta": "hola?",
+                        "desencadena": {
+                            "texto": "kfsdkfds",
+                            "buttons": [
+                                ...
+                            ]
+                        }
+                    },
+                    1: {
+                        "respuesta": "chao?",
+                        "desencadena": {
+                            "texto": "Wenisima"
+                        }
+                    }
+                ]
+            }
+            
+
+            array objetoPregunta[];
+
+            Objeto pregunta:
+            - Texto de pregunta : string
+            - Botones : array
+
+            Objeto respuesta humana:
+            - Texto : ?string
+            - Boton
+
+            Boton:
+            - Texto de respuesta de usuario : string
+            - Lo que desencadena (Respuesta bot / Respuesta bot con pregunta) (Objeto respuesta  / Objeto pregunta) : objeto bot
+
+            Objeto respuesta 
+            - Texto : string
+
+            Objeto bot:
+            - Heredan:
+                - Objeto pregunta
+                - Objeto respuesta
+
+        
+            Hola pregunte nomas // pregunta
+            - Boton 1 // respuesta usuario
+                - Bot responde la pregunta con texto / listo entonces volver al principio // respuesta bot
+            - Boton 2 // respuesta usuario
+                - Bot pregunta // respuesta bot - pregunta
+                - Boton 1 // respuesta usuario
+                    - Finalmente te responde / listo entonces volver al principio // respuesta bot
+                - Boton 2 // respuesta usuario
+                    - Bot pregunta // respuesta bot - pregunta
+                    - Tu responder con texto // respuesta usuario
+                        - Ok, gracias / listo entonces volver al principio // respuesta bot
+            - n botones
+            
+
+            
     }*/
 
     /**
