@@ -209,7 +209,7 @@ class BotConversation extends Conversation
                 if(count($foundButtons) > 0){
                     $foundButton = $foundButtons[0];
 
-                    array_push($foundButton->text);
+                    array_push($this->Responses, $foundButton->text);
                     if($botResponse->save) $this->save_history();
                     $this->create_question($foundButton->botResponse, $rootResponse);
                 }
