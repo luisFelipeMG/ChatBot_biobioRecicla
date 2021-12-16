@@ -87,7 +87,9 @@ class BotConversation extends Conversation
     }
     public function askEmail()
     {
-        $this->ask('Una cosa mas... Cual es su email?', function(Answer $answer) {
+        $this->ask('Una cosa mas... Cual es su email?', [
+            ['pattern' => '([0+9]+)',
+            'callback' => function(Answer $answer) {
             // Guardar resultado
             $this->email = $answer->getText();
             /*$contact = new Contact();
@@ -102,7 +104,8 @@ class BotConversation extends Conversation
             ]);
             $this->say('Gracias '.$this->firstname);
             $this->test();
-        });
+            }]
+        ]);
     }
 
     public function test(){
