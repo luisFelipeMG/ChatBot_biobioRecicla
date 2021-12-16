@@ -71,17 +71,19 @@ class BotConversation extends Conversation
             $this->askCellphone();
         });
     }
-
+    
     public function askCellphone()
     {
-        $this->ask('Una cosa mas... Cual es su numero de telefono?', function(Answer $answer) {
-            /* /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im  */
-            // Guardar resultado
-            $this->phone = $answer->getText();
-
-            $this->say('Gracias '.$this->firstname);
-            $this->askEmail();
-        });
+        $this->ask('Una cosa mas... Cual es su numero de telefono?', [
+            ['pattern' => '([0-9]+)',
+            'callback' => function(Answer $answer) {
+                /* /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im  */
+                // Guardar resultado
+                $this->phone = $answer->getText();
+                $this->say('Gracias '.$this->firstname);
+                $this->askEmail();
+            }]
+        ]);
     }
     public function askEmail()
     {
