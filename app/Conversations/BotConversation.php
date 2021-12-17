@@ -88,7 +88,7 @@ class BotConversation extends Conversation
     public function askEmail()
     {
         $this->ask('Una cosa mas... Cual es su email?', [
-            ['pattern' => '([0+9]+)',
+            ['pattern' => '([0-9]+)',
             'callback' => function(Answer $answer) {
             // Guardar resultado
             $this->email = $answer->getText();
@@ -109,8 +109,9 @@ class BotConversation extends Conversation
     }
 
     public function test(){
-        $preguntaInicial = new BotResponse("Hola qué quiere saber?", [
-            new ChatButton("Deme un poco más de info", new BotResponse("Abueno aqui tiene un poco más de info, gracias")),
+        $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
+            new ChatButton("¿En que consiste la empresa?", new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
+            la sociedad y la naturaleza, para contribuir a una mejor calidad de vida.")),
             new ChatButton("Me puede preguntar algo más pls?", new BotResponse("Si por supuesto, qué quiere comer?",[
                 new ChatButton("Cazuela", new BotResponse("OK", null, true)),
                 new ChatButton("Empanada", new BotResponse("Dale", null, true))
