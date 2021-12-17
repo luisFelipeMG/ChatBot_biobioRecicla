@@ -112,9 +112,13 @@ class BotConversation extends Conversation
         $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
             new ChatButton("¿En que consiste la empresa?", new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
             la sociedad y la naturaleza, para contribuir a una mejor calidad de vida.")),
-            new ChatButton("Me puede preguntar algo más pls?", new BotResponse("Si por supuesto, qué quiere comer?",[
-                new ChatButton("Cazuela", new BotResponse("OK", null, true)),
-                new ChatButton("Empanada", new BotResponse("Dale", null, true))
+            new ChatButton("¿Qué tipo de servicios ofrecen?", new BotResponse("Brindamos soluciones ambientales, para la gestión integral de residuos.")),
+            new ChatButton("Desea cotizar algun servicio que ofrecemos?", new BotResponse("OK! Qué servicio desea cotizar?",[
+                new ChatButton("Gestión de residuos", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
+                new ChatButton("Puntos limpios", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
+                new ChatButton("Consultoría", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
+                new ChatButton("Educación Ambiental", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
+                new ChatButton("Biciclaje", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true))
             ]))
         ]);
 
