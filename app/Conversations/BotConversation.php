@@ -75,7 +75,7 @@ class BotConversation extends Conversation
     public function askCellphone()
     {
         $this->ask('Una cosa mas... Cual es su numero de telefono?', [
-            ['pattern' => '([0-9]+)',
+            ['pattern' => '[0-9]+',
             'callback' => function(Answer $answer) {
                 /* /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im  */
                 // Guardar resultado
@@ -88,7 +88,7 @@ class BotConversation extends Conversation
     public function askEmail()
     {
         $this->ask('Una cosa mas... Cual es su email?', [
-            ['pattern' => '([0-9]+)',
+            ['pattern' => '([0-9])*8',
             'callback' => function(Answer $answer) {
             // Guardar resultado
             $this->email = $answer->getText();
