@@ -63,11 +63,11 @@ class BotConversation extends Conversation
     protected $Bot_responses;
     public function askName()
     {
-        $this->ask('Hola! Cual es su nombre?', function(Answer $answer) {
+        $this->ask('Hola! Cual es su nombre? Para dirigirme a usted.', function(Answer $answer) {
             // Guardar resultado
             $this->firstname = $answer->getText();
 
-            $this->say('Nice to meet you '.$this->firstname);
+            $this->say('Un placer conocerle '.$this->firstname);
             $bool = 0;
             $this->askCellphone($bool);
         });
@@ -90,7 +90,7 @@ class BotConversation extends Conversation
                 
             });
         }
-        $this->ask('Una cosa mas... Cual es su numero de telefono?', function(Answer $answer) {
+        $this->ask('Una cosa mas... Cual es su número de telefono? Para que podamos contactarlo para una atención personalizada.', function(Answer $answer) {
             // /(\+56|0056|56)?[ -]*(9)[ -]*([0-9][ -]*){8}/
             $answer->getText(); // Guardar resultado
             if(\preg_match("/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im", $answer)){
@@ -125,7 +125,7 @@ class BotConversation extends Conversation
                 }
             });
         }
-        $this->ask('Una cosa mas... Cual es su email?', function(Answer $answer) {
+        $this->ask('Por último, necesitamos su email.', function(Answer $answer) {
             /*$contact = new Contact(); $contact->name = $this->firstname; $contact->phone = $this->phone; $contact->mail = $this->email; $contact->save();*/
             $answer->getText();
             if(\preg_match("/^(([^<>()\[\]\.,;:\s@\”]+(\.[^<>()\[\]\.,;:\s@\”]+)*)|(\”.+\”))@(([^<>()[\]\.,;:\s@\”]+\.)+[^<>()[\]\.,;:\s@\”]{2,})$/", $answer)){
