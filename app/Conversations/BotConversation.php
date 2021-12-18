@@ -158,7 +158,7 @@ class BotConversation extends Conversation
                 new ChatButton("Educación Ambiental", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
                 new ChatButton("Biciclaje", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true))
             ]))
-        ]);
+        ], true);
 
         $this->create_question($preguntaInicial, $preguntaInicial);
     }
@@ -235,7 +235,7 @@ class BotConversation extends Conversation
     public function create_question(BotResponse $botResponse, BotResponse $rootResponse){
         array_push($this->Responses, $botResponse->text);
         if($botResponse->save) $this->save_history();
-        
+
         if($botResponse->buttons == null){
             $this->say($botResponse->text);
             $this->create_question($rootResponse, $rootResponse);
