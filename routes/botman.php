@@ -5,7 +5,7 @@ $botman = resolve('botman');
 
 //$botman->say("Hola! Soy un bot que te puede guiar! Si tienes alguna duda solo escribe 'Hola bot'", null);
 
-$botman->hears('Hola bot', 'App\Http\Controllers\ChatController@index');
+$botman->hears('Hola', 'App\Http\Controllers\ChatController@index');
 //El primer parametro "hola bot" será el que active nuestro bot, llamará a la función
 //index de nuestro controlador chatController.php y ésta a la función hello
 
