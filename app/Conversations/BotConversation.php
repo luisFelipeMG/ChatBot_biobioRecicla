@@ -233,10 +233,11 @@ class BotConversation extends Conversation
     
 
     public function create_question(BotResponse $botResponse, BotResponse $rootResponse){
+        array_push($this->Responses, $botResponse->text);
+        if($botResponse->save) $this->save_history();
+        
         if($botResponse->buttons == null){
-            array_push($this->Responses, $botResponse->text);
             $this->say($botResponse->text);
-            if($botResponse->save) $this->save_history();
             $this->create_question($rootResponse, $rootResponse);
             return;
         }        
@@ -245,7 +246,7 @@ class BotConversation extends Conversation
             ->fallback('Unable to ask question')
             ->callbackId('ask_reason')
             ->addButtons(array_map( function($value){ return Button::create($value->text)->value($value->text);}, $botResponse->buttons ));
-        array_push($this->Responses, $botResponse->text);
+        //array_push($this->Responses, $botResponse->text);
 
         return $this->ask($question, function (Answer $answer) use ($botResponse, $rootResponse){
             if ($answer->isInteractiveMessageReply()) {
