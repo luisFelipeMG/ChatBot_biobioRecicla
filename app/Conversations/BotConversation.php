@@ -69,7 +69,32 @@ class BotConversation extends Conversation
 
             $this->say('Un placer conocerle '.$this->firstname);
             $bool = 0;
-            $this->askCellphone($bool);
+            $this->askWhat($bool);
+        });
+    }
+
+    public function askWhat($bool){
+        $question = Question::create($this->firstname.', es usted una persona individual o representa a una empresa? Debe hacer click en los siguentes botones para responder:')
+        ->fallback('Incapaz de hacer la pregunta')
+        ->callbackId('create_database')
+        ->addButtons([
+            Button::create('Soy una persona individual')->value('individual'),
+            Button::create('Represento a una empresa')->value('empresa'),
+        ]);
+
+        $this->ask($question, function (Answer $answer) {
+        // Detect if button was clicked:
+        if ($answer->isInteractiveMessageReply()) {
+            if ($answer->getValue() == 'individual'){
+                $this->phone = "persona individual";
+                $this->email = "persona individual";
+                $bool = 1;
+                $this->test($bool);
+            }else if($answer->getValue() == 'empresa'){
+                $bool = 0;
+                $this->askCellphone($bool);
+            } // will be either 'yes' or 'no'
+        }
         });
     }
     
@@ -90,18 +115,39 @@ class BotConversation extends Conversation
                 
             });
         }
-        $this->ask('Una cosa mas... Cual es su número de telefono? Para que podamos contactarlo para una atención personalizada.', function(Answer $answer) {
-            // /(\+56|0056|56)?[ -]*(9)[ -]*([0-9][ -]*){8}/
-            $answer->getText(); // Guardar resultado
-            if(\preg_match("/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im", $answer)){
-                $this->phone = $answer->getText();
-                $this->say('Gracias '.$this->firstname);
+        $question = Question::create($this->firstname.', esta usted de acuerdo con que nos proporcione su número de teléfono y email para que podamos contactarlo para una atención mas personalizada?')
+        ->fallback('Incapaz de hacer la pregunta')
+        ->callbackId('create_database')
+        ->addButtons([
+            Button::create('Si, me parece bien')->value('si'),
+            Button::create('No estoy de acuerdo')->value('no'),
+        ]);
+
+        $this->ask($question, function (Answer $answer) {
+        // Detect if button was clicked:
+        if ($answer->isInteractiveMessageReply()) {
+            if ($answer->getValue() == 'si'){
+                $this->ask('Bien! Cúal es su número de teléfono?', function(Answer $answer) {
+                    // /(\+56|0056|56)?[ -]*(9)[ -]*([0-9][ -]*){8}/
+                    $answer->getText(); // Guardar resultado
+                    if(\preg_match("/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im", $answer)){
+                        $this->phone = $answer->getText();
+                        $this->say('Gracias '.$this->firstname);
+                        $bool = 0;
+                        $this->askEmail($bool);
+                    } else{
+                        $bool = 1;
+                        $this->askCellphone($bool);
+                    }
+                });
+            }else if($answer->getValue() == 'no'){
+                $this->say('OK! No hay problema!');
+                $this->phone = "No dió número";
+                $this->email = "No dió email";
                 $bool = 0;
-                $this->askEmail($bool);
-            } else{
-                $bool = 1;
-                $this->askCellphone($bool);
-            }
+                $this->test($bool);
+            } // will be either 'yes' or 'no'
+        }
         });
     }
     public function askEmail($bool)
@@ -137,7 +183,7 @@ class BotConversation extends Conversation
                 ]);
                 $this->say('Gracias '.$this->firstname);
                 $bool = 0;
-                $this->test();
+                $this->test($bool);
             } else{
                 $bool = 1;
                 $this->askEmail($bool);
@@ -146,7 +192,23 @@ class BotConversation extends Conversation
         );
     }
 
-    public function test(){
+    public function test($bool){
+        if($bool == 1){
+            $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
+                new ChatButton("¿En que consiste la empresa?", new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
+                la sociedad y la naturaleza, para contribuir a una mejor calidad de vida.")),
+                new ChatButton("¿Qué tipo de servicios ofrecen?", new BotResponse("Brindamos soluciones ambientales, para la gestión integral de residuos.")),
+                new ChatButton("Desea cotizar algun servicio que ofrecemos?", new BotResponse("OK! Qué servicio desea cotizar?",[
+                    new ChatButton("Gestión de residuos", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
+                    new ChatButton("Puntos limpios", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
+                    new ChatButton("Consultoría", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
+                    new ChatButton("Educación Ambiental", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
+                    new ChatButton("Biciclaje", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true))
+                ]))
+            ], true);
+    
+            $this->create_question($preguntaInicial, $preguntaInicial);
+        }
         $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
             new ChatButton("¿En que consiste la empresa?", new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
             la sociedad y la naturaleza, para contribuir a una mejor calidad de vida.")),
