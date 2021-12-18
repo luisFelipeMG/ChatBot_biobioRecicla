@@ -68,28 +68,44 @@ class BotConversation extends Conversation
             $this->firstname = $answer->getText();
 
             $this->say('Nice to meet you '.$this->firstname);
-            $this->askCellphone();
+            $bool = 0;
+            $this->askCellphone($bool);
         });
     }
     
-    public function askCellphone()
+    public function askCellphone($bool)
     {
-        $this->ask('Una cosa mas... Cual es su numero de telefono?', [
-            ['pattern' => '[0-9]+',
-            'callback' => function(Answer $answer) {
-                /* /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im  */
-                // Guardar resultado
-                $this->phone = $answer->getText();
+        if($bool == 1){
+            $this->ask('Perdon, el numero debe estar en el formato de "+56912345678", intente de nuevo por favor', function(Answer $answer) {
+                $answer->getText(); // Guardar resultado
+                if(\preg_match("/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im", $answer)){
+                    $this->phone = $answer;
+                    $this->say('Gracias '.$this->firstname);
+                    $bool = 0;
+                    $this->askEmail();
+                } else{
+                    $bool = 1;
+                    $this->askCellphone($bool);
+                }
+                
+            });
+        }
+        $this->ask('Una cosa mas... Cual es su numero de telefono?', function(Answer $answer) {
+            // /(\+56|0056|56)?[ -]*(9)[ -]*([0-9][ -]*){8}/
+            $answer->getText(); // Guardar resultado
+            if(\preg_match("/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im", $answer)){
+                $this->phone = $answer;
                 $this->say('Gracias '.$this->firstname);
                 $this->askEmail();
-            }]
-        ]);
+            } else{
+                $bool = 1;
+                $this->askCellphone($bool);
+            }
+        });
     }
     public function askEmail()
     {
-        $this->ask('Una cosa mas... Cual es su email?', [
-            ['pattern' => '([0-9])*8',
-            'callback' => function(Answer $answer) {
+        $this->ask('Una cosa mas... Cual es su email?', function(Answer $answer) {
             // Guardar resultado
             $this->email = $answer->getText();
             /*$contact = new Contact();
@@ -104,8 +120,8 @@ class BotConversation extends Conversation
             ]);
             $this->say('Gracias '.$this->firstname);
             $this->test();
-            }]
-        ]);
+            }
+        );
     }
 
     public function test(){
