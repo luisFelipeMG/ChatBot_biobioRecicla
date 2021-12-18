@@ -76,13 +76,13 @@ class BotConversation extends Conversation
     public function askCellphone($bool)
     {
         if($bool == 1){
-            $this->ask('Perdon, el numero debe estar en el formato de "+56912345678", intente de nuevo por favor', function(Answer $answer) {
+            $this->ask('Perdon, el número debe estar en el formato de "+56912345678", intente de nuevo por favor', function(Answer $answer) {
                 $answer->getText(); // Guardar resultado
                 if(\preg_match("/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im", $answer)){
-                    $this->phone = $answer;
+                    $this->phone = $answer->getText();
                     $this->say('Gracias '.$this->firstname);
                     $bool = 0;
-                    $this->askEmail();
+                    $this->askEmail($bool);
                 } else{
                     $bool = 1;
                     $this->askCellphone($bool);
@@ -94,32 +94,54 @@ class BotConversation extends Conversation
             // /(\+56|0056|56)?[ -]*(9)[ -]*([0-9][ -]*){8}/
             $answer->getText(); // Guardar resultado
             if(\preg_match("/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im", $answer)){
-                $this->phone = $answer;
+                $this->phone = $answer->getText();
                 $this->say('Gracias '.$this->firstname);
-                $this->askEmail();
+                $bool = 0;
+                $this->askEmail($bool);
             } else{
                 $bool = 1;
                 $this->askCellphone($bool);
             }
         });
     }
-    public function askEmail()
+    public function askEmail($bool)
     {
+        if($bool == 1){
+            $this->ask('Perdon, el email debe estar en el formato de "tumail@dominio.com", intente de nuevo por favor', function(Answer $answer) {
+                $answer->getText(); // Guardar resultado
+                if(\preg_match("/^(([^<>()\[\]\.,;:\s@\”]+(\.[^<>()\[\]\.,;:\s@\”]+)*)|(\”.+\”))@(([^<>()[\]\.,;:\s@\”]+\.)+[^<>()[\]\.,;:\s@\”]{2,})$/", $answer)){
+                    $this->email = $answer->getText();
+                    $this->contacto = Contact::create([
+                        'name'=> $this->firstname,
+                        'phone'=> $this->phone,
+                        'mail'=> $this->email
+                    ]);
+                    $this->say('Gracias '.$this->firstname);
+                    $bool = 0;
+                    $this->test();
+                } else{
+                    $bool = 1;
+                    $this->askEmail($bool);
+                }
+            });
+        }
         $this->ask('Una cosa mas... Cual es su email?', function(Answer $answer) {
-            // Guardar resultado
-            $this->email = $answer->getText();
-            /*$contact = new Contact();
-            $contact->name = $this->firstname;
-            $contact->phone = $this->phone;
-            $contact->mail = $this->email;
-            $contact->save();*/
-            $this->contacto = Contact::create([
-                'name'=> $this->firstname,
-                'phone'=> $this->phone,
-                'mail'=> $this->email
-            ]);
-            $this->say('Gracias '.$this->firstname);
-            $this->test();
+            /*$contact = new Contact(); $contact->name = $this->firstname; $contact->phone = $this->phone; $contact->mail = $this->email; $contact->save();*/
+            $answer->getText();
+            if(\preg_match("/^(([^<>()\[\]\.,;:\s@\”]+(\.[^<>()\[\]\.,;:\s@\”]+)*)|(\”.+\”))@(([^<>()[\]\.,;:\s@\”]+\.)+[^<>()[\]\.,;:\s@\”]{2,})$/", $answer)){
+                $this->email = $answer->getText();
+                $this->contacto = Contact::create([
+                    'name'=> $this->firstname,
+                    'phone'=> $this->phone,
+                    'mail'=> $this->email
+                ]);
+                $this->say('Gracias '.$this->firstname);
+                $bool = 0;
+                $this->test();
+            } else{
+                $bool = 1;
+                $this->askEmail($bool);
+            }
             }
         );
     }
