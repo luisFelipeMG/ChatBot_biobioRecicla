@@ -86,8 +86,13 @@ class BotConversation extends Conversation
         // Detect if button was clicked:
         if ($answer->isInteractiveMessageReply()) {
             if ($answer->getValue() == 'individual'){
-                $this->phone = "persona individual";
-                $this->email = "persona individual";
+                $this->phone = "No es una empresa";
+                $this->email = "No es una empresa";
+                $this->contacto = [
+                    'name'=> $this->firstname,
+                    'phone'=> $this->phone,
+                    'mail'=> $this->email
+                ];
                 $bool = 1;
                 $this->test($bool);
             }else if($answer->getValue() == 'empresa'){
@@ -144,6 +149,11 @@ class BotConversation extends Conversation
                 $this->say('OK! No hay problema!');
                 $this->phone = "No dió número";
                 $this->email = "No dió email";
+                $this->contacto = Contact::create([
+                    'name'=> $this->firstname,
+                    'phone'=> $this->phone,
+                    'mail'=> $this->email
+                ]);
                 $bool = 0;
                 $this->test($bool);
             } // will be either 'yes' or 'no'
@@ -195,8 +205,7 @@ class BotConversation extends Conversation
     public function test($bool){
         if($bool == 1){
             $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
-                new ChatButton("¿En que consiste la empresa?", new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
-                la sociedad y la naturaleza, para contribuir a una mejor calidad de vida.")),
+                new ChatButton("Tengo bastante plastico pero no se en donde dejarlo, que debo hacer con el?", new BotResponse("Puedes dejarlo en un punto limpio para reciclarlo!")),
                 new ChatButton("¿Qué tipo de servicios ofrecen?", new BotResponse("Brindamos soluciones ambientales, para la gestión integral de residuos.")),
                 new ChatButton("Desea cotizar algun servicio que ofrecemos?", new BotResponse("OK! Qué servicio desea cotizar?",[
                     new ChatButton("Gestión de residuos", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
@@ -207,28 +216,30 @@ class BotConversation extends Conversation
                 ]))
             ], true);
     
-            $this->create_question($preguntaInicial, $preguntaInicial);
-        }
-        $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
+            $this->create_question($preguntaInicial, $preguntaInicial, $bool);
+        }else{
+             $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
             new ChatButton("¿En que consiste la empresa?", new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
             la sociedad y la naturaleza, para contribuir a una mejor calidad de vida.")),
             new ChatButton("¿Qué tipo de servicios ofrecen?", new BotResponse("Brindamos soluciones ambientales, para la gestión integral de residuos.")),
             new ChatButton("Desea cotizar algun servicio que ofrecemos?", new BotResponse("OK! Qué servicio desea cotizar?",[
-                new ChatButton("Gestión de residuos", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
-                new ChatButton("Puntos limpios", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
-                new ChatButton("Consultoría", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
-                new ChatButton("Educación Ambiental", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
-                new ChatButton("Biciclaje", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true))
+                new ChatButton("Gestión de residuos", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
+                new ChatButton("Puntos limpios", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
+                new ChatButton("Consultoría", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
+                new ChatButton("Educación Ambiental", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
+                new ChatButton("Biciclaje", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/conciencia-ambiental/", null, true))
             ]))
         ], true);
 
-        $this->create_question($preguntaInicial, $preguntaInicial);
+        $this->create_question($preguntaInicial, $preguntaInicial, $bool);
+        }
+       
     }
     
 
-    public function create_question(BotResponse $botResponse, BotResponse $rootResponse){
+    public function create_question(BotResponse $botResponse, BotResponse $rootResponse, $bool){
         array_push($this->Responses, $botResponse->text);
-        if($botResponse->save) $this->save_history();
+        if($botResponse->save) $this->save_history($bool);
 
         if($botResponse->buttons == null){
             $this->say($botResponse->text);
@@ -253,18 +264,24 @@ class BotConversation extends Conversation
                     $foundButton = array_shift($foundButtons);
                         
                     array_push($this->Responses, $foundButton->text);
-                    if($botResponse->save) $this->save_history();
+                    if($botResponse->save) $this->save_history($bool);
                     $this->create_question($foundButton->botResponse, $rootResponse);
                 }
             }
         });
     }
 
-    public function save_history(){
-        $contactos = json_decode($this->contacto, true);
-        $array_merge = array_merge($this->Responses, $contactos);
-        $Responsejson = json_encode($array_merge);
-        Storage::disk('public')->put('history '.$this->contacto->id.'.json', $Responsejson);
+    public function save_history($bool){
+        if($bool == 0){
+            $contactos = json_decode($this->contacto, true);
+            $array_merge = array_merge($this->Responses, $contactos);
+            $Responsejson = json_encode($array_merge);
+            Storage::disk('public')->put('history '.$this->contacto->id.'.json', $Responsejson);
+        }else{
+            $array_merge = array_merge($this->Responses, $this->contacto);
+            $Responsejson = json_encode($array_merge);
+            Storage::disk('public')->put('history anonymous.json', $Responsejson);
+        }
     }
 
     /*public function create_question($preguntita, $respuestita){
