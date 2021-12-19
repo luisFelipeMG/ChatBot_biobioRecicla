@@ -88,11 +88,11 @@ class BotConversation extends Conversation
             if ($answer->getValue() == 'individual'){
                 $this->phone = "No es una empresa";
                 $this->email = "No es una empresa";
-                $this->contacto = [
+                $this->contacto = Contact::create([
                     'name'=> $this->firstname,
                     'phone'=> $this->phone,
                     'mail'=> $this->email
-                ];
+                ]);
                 $bool = 1;
                 $this->test($bool);
             }else if($answer->getValue() == 'empresa'){
@@ -243,7 +243,7 @@ class BotConversation extends Conversation
 
         if($botResponse->buttons == null){
             $this->say($botResponse->text);
-            $this->create_question($rootResponse, $rootResponse);
+            $this->create_question($rootResponse, $rootResponse, $bool);
             return;
         }        
 
@@ -265,7 +265,7 @@ class BotConversation extends Conversation
                         
                     array_push($this->Responses, $foundButton->text);
                     if($botResponse->save) $this->save_history($bool);
-                    $this->create_question($foundButton->botResponse, $rootResponse);
+                    $this->create_question($foundButton->botResponse, $rootResponse, $bool);
                 }
             }
         });
@@ -278,9 +278,10 @@ class BotConversation extends Conversation
             $Responsejson = json_encode($array_merge);
             Storage::disk('public')->put('history '.$this->contacto->id.'.json', $Responsejson);
         }else{
-            $array_merge = array_merge($this->Responses, $this->contacto);
+            $contactoss = json_decode($this->contacto, true);
+            $array_merge = array_merge($this->Responses, $contactoss);
             $Responsejson = json_encode($array_merge);
-            Storage::disk('public')->put('history anonymous.json', $Responsejson);
+            Storage::disk('public')->put('history anonymous '.$this->contacto->id.'.json', $Responsejson);
         }
     }
 
