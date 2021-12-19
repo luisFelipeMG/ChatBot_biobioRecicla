@@ -206,14 +206,7 @@ class BotConversation extends Conversation
         if($bool == 1){
             $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
                 new ChatButton("Tengo bastante plastico pero no se en donde dejarlo, que debo hacer con el?", new BotResponse("Puedes dejarlo en un punto limpio para reciclarlo!")),
-                new ChatButton("¿Qué tipo de servicios ofrecen?", new BotResponse("Brindamos soluciones ambientales, para la gestión integral de residuos.")),
-                new ChatButton("Desea cotizar algun servicio que ofrecemos?", new BotResponse("OK! Qué servicio desea cotizar?",[
-                    new ChatButton("Gestión de residuos", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
-                    new ChatButton("Puntos limpios", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
-                    new ChatButton("Consultoría", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
-                    new ChatButton("Educación Ambiental", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true)),
-                    new ChatButton("Biciclaje", new BotResponse("Excelente! Lo llevaremos a la página correspondiente", null, true))
-                ]))
+
             ], true);
     
             $this->create_question($preguntaInicial, $preguntaInicial, $bool);
