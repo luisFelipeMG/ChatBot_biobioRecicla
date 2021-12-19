@@ -253,7 +253,7 @@ class BotConversation extends Conversation
             ->addButtons(array_map( function($value){ return Button::create($value->text)->value($value->text);}, $botResponse->buttons ));
         //array_push($this->Responses, $botResponse->text);
 
-        return $this->ask($question, function (Answer $answer) use ($botResponse, $rootResponse){
+        return $this->ask($question, function (Answer $answer) use ($botResponse, $rootResponse, $bool){
             if ($answer->isInteractiveMessageReply()) {
 
                 $foundButtons = array_filter($botResponse->buttons, function($value, $key)  use($answer){
