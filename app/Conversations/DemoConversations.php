@@ -102,7 +102,7 @@ class DemoConversations extends BaseFlowConversation
     public function init()
     {
         // Execute function you want to run demo
-        $this->hello_world_demo();
+        $this->first_demo();
         return;
     }
 }
