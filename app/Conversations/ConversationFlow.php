@@ -7,6 +7,7 @@ use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Outgoing\Question;
 use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 use BotMan\BotMan\Messages\Conversations\Conversation;
+use Closure;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
@@ -24,11 +25,6 @@ class BotResponse{          // Can be a question
 
 }
 
-class HumanResponse{
-    public $text;
-    public $usedButton; // nullable
-}
-
 class ChatButton{
     public $text;
     public $botResponse;
@@ -40,8 +36,16 @@ class ChatButton{
     }
 }
 
-class ChatReady{
-    public $ready = true;
+class BotOpenQuestion extends BotResponse{
+    public $onAnswerCallback;
+
+    function __construct(string $text, ?array $buttons = null, bool $saveLog = false, Closure $onAnswerCallback)
+    {
+        $this->text = $text;
+        $this->saveLog = $saveLog;
+        $this->buttons = $buttons;
+        $this->onAnswerCallback = $onAnswerCallback;
+    }
 }
 
 class ConversationFlow{
@@ -57,6 +61,12 @@ class ConversationFlow{
      * @var bool
      */
     private static $logAnonymous;
+
+    /**
+     * User section define conversation flow for business purposes
+     * @var int
+     */
+    private static $userSection;
 
     // Setter for contact
     public static function set_contact(Contact $newContact){
@@ -82,7 +92,7 @@ class ConversationFlow{
             $context->say($botResponse->text);
             ConversationFlow::create_question($context, $rootResponse, $rootResponse);
             return;
-        }        
+        }
 
         // If there are buttons, so create question
         $question = Question::create($botResponse->text)
@@ -135,3 +145,94 @@ class ConversationFlow{
         );
     }
 }
+
+
+/// COMMENTS ONLY FOR DEBUG
+/*public function create_question($preguntita, $respuestita){
+        $question = Question::create($preguntita)//le preguntamos al usuario que quiere saber
+            ->fallback('Unable to ask question')
+            ->callbackId('ask_reason')
+            ->addButtons([
+                Button::create($respuestita)->value('respuesta'),//Opción de hora, con value hour
+            ]);
+            return $this->ask($question, function (Answer $answer) {
+                if ($answer->isInteractiveMessageReply()) {
+                    if ($answer->getValue() === 'respuesta') {//Le muestra la hora la usuario si el value es hour
+                        $this->say();
+                    }else if ($answer->getValue() === 'day'){//Le muestra la hora la usuario si el value es date
+                        $this->say('Brindamos soluciones ambientales, para la gestión integral de residuos.');
+                        $click2 = '¿Que tipo de servicios ofrecen?';
+                        $contactos = json_decode($this->contacto, true);
+                        //array_push($this->Responses, $contactos, $this->click1, $click2);
+                        array_push($this->Responses, $this->click1, $click2);
+                        $array_merge = array_merge($this->Responses, $contactos);
+                        $Responsejson = json_encode($array_merge);
+                        //echo $Responsejson;
+                        Storage::disk('public')->put('history '.$this->contacto->id.'.json', $Responsejson);
+                    }
+                }
+            });
+
+            json:
+
+            {
+                "texto": "what is this?",
+                "buttons": [
+                    0: {
+                        "respuesta": "hola?",
+                        "desencadena": {
+                            "texto": "kfsdkfds",
+                            "buttons": [
+                                ...
+                            ]
+                        }
+                    },
+                    1: {
+                        "respuesta": "chao?",
+                        "desencadena": {
+                            "texto": "Wenisima"
+                        }
+                    }
+                ]
+            }
+            
+
+            array objetoPregunta[];
+
+            Objeto pregunta:
+            - Texto de pregunta : string
+            - Botones : array
+
+            Objeto respuesta humana:
+            - Texto : ?string
+            - Boton
+
+            Boton:
+            - Texto de respuesta de usuario : string
+            - Lo que desencadena (Respuesta bot / Respuesta bot con pregunta) (Objeto respuesta  / Objeto pregunta) : objeto bot
+
+            Objeto respuesta 
+            - Texto : string
+
+            Objeto bot:
+            - Heredan:
+                - Objeto pregunta
+                - Objeto respuesta
+
+        
+            Hola pregunte nomas // pregunta
+            - Boton 1 // respuesta usuario
+                - Bot responde la pregunta con texto / listo entonces volver al principio // respuesta bot
+            - Boton 2 // respuesta usuario
+                - Bot pregunta // respuesta bot - pregunta
+                - Boton 1 // respuesta usuario
+                    - Finalmente te responde / listo entonces volver al principio // respuesta bot
+                - Boton 2 // respuesta usuario
+                    - Bot pregunta // respuesta bot - pregunta
+                    - Tu responder con texto // respuesta usuario
+                        - Ok, gracias / listo entonces volver al principio // respuesta bot
+            - n botones
+            
+
+            
+    }*/

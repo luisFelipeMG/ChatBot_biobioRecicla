@@ -9,6 +9,8 @@ use BotMan\BotMan\Messages\Outgoing\Question;
 use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 use BotMan\BotMan\Messages\Conversations\Conversation;
 
+define('HUMAN', 1);
+define('BUSINESS', 0);
 
 class BotConversation extends Conversation
 {
@@ -163,127 +165,33 @@ class BotConversation extends Conversation
         );
     }
 
-    public function test($bool){
-        if($bool == 1){
+    public function test(int $userSection){
+        if($userSection == HUMAN){
             $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
                 new ChatButton("Tengo bastante plastico pero no se en donde dejarlo, que debo hacer con el?", new BotResponse("Puedes dejarlo en un punto limpio para reciclarlo!")),
 
             ], true);
-    
-            $this->create_question($preguntaInicial, $preguntaInicial, $bool);
-        }else{
-             $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
-            new ChatButton("¿En que consiste la empresa?", new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
-            la sociedad y la naturaleza, para contribuir a una mejor calidad de vida.")),
-            new ChatButton("¿Qué tipo de servicios ofrecen?", new BotResponse("Brindamos soluciones ambientales, para la gestión integral de residuos.")),
-            new ChatButton("Desea cotizar algun servicio que ofrecemos?", new BotResponse("OK! Qué servicio desea cotizar?",[
-                new ChatButton("Gestión de residuos", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
-                new ChatButton("Puntos limpios", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
-                new ChatButton("Consultoría", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
-                new ChatButton("Educación Ambiental", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
-                new ChatButton("Biciclaje", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/conciencia-ambiental/", null, true))
-            ]))
-        ], true);
 
-        $this->create_question($preguntaInicial, $preguntaInicial, $bool);
+            ConversationFlow::create_question($this, $preguntaInicial, $preguntaInicial);
+        } else{
+             $preguntaInicial = new BotResponse("Bienvenido! Qué desea saber?", [
+                new ChatButton("¿En que consiste la empresa?", new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
+                la sociedad y la naturaleza, para contribuir a una mejor calidad de vida.")),
+                new ChatButton("¿Qué tipo de servicios ofrecen?", new BotResponse("Brindamos soluciones ambientales, para la gestión integral de residuos.")),
+                new ChatButton("Desea cotizar algun servicio que ofrecemos?", new BotResponse("OK! Qué servicio desea cotizar?",[
+                    new ChatButton("Gestión de residuos", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
+                    new ChatButton("Puntos limpios", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
+                    new ChatButton("Consultoría", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
+                    new ChatButton("Educación Ambiental", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
+                    new ChatButton("Biciclaje", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/conciencia-ambiental/", null, true))
+                ]))
+            ], true);
+
+            ConversationFlow::create_question($this, $preguntaInicial, $preguntaInicial);
         }
        
     }
     
-
-    
-
-    
-
-    /*public function create_question($preguntita, $respuestita){
-        $question = Question::create($preguntita)//le preguntamos al usuario que quiere saber
-            ->fallback('Unable to ask question')
-            ->callbackId('ask_reason')
-            ->addButtons([
-                Button::create($respuestita)->value('respuesta'),//Opción de hora, con value hour
-            ]);
-            return $this->ask($question, function (Answer $answer) {
-                if ($answer->isInteractiveMessageReply()) {
-                    if ($answer->getValue() === 'respuesta') {//Le muestra la hora la usuario si el value es hour
-                        $this->say();
-                    }else if ($answer->getValue() === 'day'){//Le muestra la hora la usuario si el value es date
-                        $this->say('Brindamos soluciones ambientales, para la gestión integral de residuos.');
-                        $click2 = '¿Que tipo de servicios ofrecen?';
-                        $contactos = json_decode($this->contacto, true);
-                        //array_push($this->Responses, $contactos, $this->click1, $click2);
-                        array_push($this->Responses, $this->click1, $click2);
-                        $array_merge = array_merge($this->Responses, $contactos);
-                        $Responsejson = json_encode($array_merge);
-                        //echo $Responsejson;
-                        Storage::disk('public')->put('history '.$this->contacto->id.'.json', $Responsejson);
-                    }
-                }
-            });
-
-            json:
-
-            {
-                "texto": "what is this?",
-                "buttons": [
-                    0: {
-                        "respuesta": "hola?",
-                        "desencadena": {
-                            "texto": "kfsdkfds",
-                            "buttons": [
-                                ...
-                            ]
-                        }
-                    },
-                    1: {
-                        "respuesta": "chao?",
-                        "desencadena": {
-                            "texto": "Wenisima"
-                        }
-                    }
-                ]
-            }
-            
-
-            array objetoPregunta[];
-
-            Objeto pregunta:
-            - Texto de pregunta : string
-            - Botones : array
-
-            Objeto respuesta humana:
-            - Texto : ?string
-            - Boton
-
-            Boton:
-            - Texto de respuesta de usuario : string
-            - Lo que desencadena (Respuesta bot / Respuesta bot con pregunta) (Objeto respuesta  / Objeto pregunta) : objeto bot
-
-            Objeto respuesta 
-            - Texto : string
-
-            Objeto bot:
-            - Heredan:
-                - Objeto pregunta
-                - Objeto respuesta
-
-        
-            Hola pregunte nomas // pregunta
-            - Boton 1 // respuesta usuario
-                - Bot responde la pregunta con texto / listo entonces volver al principio // respuesta bot
-            - Boton 2 // respuesta usuario
-                - Bot pregunta // respuesta bot - pregunta
-                - Boton 1 // respuesta usuario
-                    - Finalmente te responde / listo entonces volver al principio // respuesta bot
-                - Boton 2 // respuesta usuario
-                    - Bot pregunta // respuesta bot - pregunta
-                    - Tu responder con texto // respuesta usuario
-                        - Ok, gracias / listo entonces volver al principio // respuesta bot
-            - n botones
-            
-
-            
-    }*/
-
     /**
      * Start the conversation
      */
