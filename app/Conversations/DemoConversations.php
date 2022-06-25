@@ -11,38 +11,28 @@ use App\Classes\BotResponse;
 use App\Classes\BotOpenQuestion;
 use App\Classes\ChatButton;
 
-class DemoConversations extends Conversation
+class DemoConversations extends BaseFlowConversation
 {
-    /**
-     * @var ConversationFlow
-     */
-    protected $conversationFlow;
 
     // Hello world
     function hello_world_demo(){
-        $this->conversationFlow = new ConversationFlow($this);
-
         $helloWorld = new BotResponse('Hello world');
 
-        $this->conversationFlow->start_flow($helloWorld);
+        $this->start_flow($helloWorld);
     }
 
     // Only code for demo
     function first_demo(){
-        $this->conversationFlow = new ConversationFlow($this);
-
         $yourQuestion = new BotOpenQuestion(
             'Cuál es su edad?',
             fn(Answer $answer) => new BotResponse('Tu edad es '.$answer->getText())
         );
 
-        $this->conversationFlow->start_flow($yourQuestion);
+        $this->start_flow($yourQuestion);
     }
 
     // Buttons demo
     function buttons_demo(){
-        $this->conversationFlow = new ConversationFlow($this);
-
         $yourQuestion = new BotResponse(
             'De qué ciudad es usted?',
             [
@@ -51,13 +41,11 @@ class DemoConversations extends Conversation
             ]
         );
 
-        $this->conversationFlow->start_flow($yourQuestion);
+        $this->start_flow($yourQuestion);
     }
 
     // Check correct answer demo
     function correct_answer_demo(){
-        $this->conversationFlow = new ConversationFlow($this);
-
         $yourQuestion = new BotOpenQuestion(
             'Cuánto es 2+2?',
             fn() => new BotResponse('Correcto!'),
@@ -65,14 +53,12 @@ class DemoConversations extends Conversation
             fn(Answer $answer) => str_replace(' ', '', $answer->getText()) == '4' 
         );
 
-        $this->conversationFlow->start_flow($yourQuestion);
+        $this->start_flow($yourQuestion);
     }
 
     // Update variables from Conversation (like "myVariable"):
     protected $myVariable = '';
     function update_variable_demo(){
-        $this->conversationFlow = new ConversationFlow($this);
-
         $yourQuestion = new BotOpenQuestion(
             'Cuál será tu nueva variable',
             function(Answer $answer, $context) { 
@@ -81,13 +67,11 @@ class DemoConversations extends Conversation
             }
         );
         
-        $this->conversationFlow->start_flow($yourQuestion, $yourQuestion);
+        $this->start_flow($yourQuestion, $yourQuestion);
     }
 
     // Use responses from anywhere. Functions, variables or classes
     function use_multiple_responses_demo(){
-        $this->conversationFlow = new ConversationFlow($this);
-
         $secondQuestion = new BotOpenQuestion(
             'Cuál es su color favorito?',
             fn() => $this->third_question_for_demo() // Use response from function
@@ -108,14 +92,14 @@ class DemoConversations extends Conversation
             fn() => $firstQuestion // Use response from variable
         );
         
-        $this->conversationFlow->start_flow($welcomeResponse);
+        $this->start_flow($welcomeResponse);
     }
     function third_question_for_demo() { return new BotResponse('Genial! Muchas gracias por responder la encuesta'); }
     
     /**
      * Start the conversation
      */
-    public function run()
+    public function init()
     {
         // Execute function you want to run demo
         $this->hello_world_demo();

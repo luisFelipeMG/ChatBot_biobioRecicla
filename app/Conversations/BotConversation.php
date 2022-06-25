@@ -14,25 +14,17 @@ use App\Classes\ChatButton;
 define('HUMAN', 1);
 define('BUSINESS', 0);
 
-class BotConversation extends Conversation
+class BotConversation extends BaseFlowConversation
 {
     protected $firstname;
     protected $phone;
     protected $email;
-
-    /**
-     * @var ConversationFlow
-     */
-    protected $conversationFlow;
     
     /**
      * Start the conversation
      */
-    public function run()
-    {
-        // Init conversation flow
-        $this->conversationFlow = new ConversationFlow($this);
-        
+    public function init()
+    {        
         // Lista con preguntas persona natural
         $preguntasNatural = new BotResponse("Bienvenido! Qué desea saber?", [
             new ChatButton("Tengo bastante plastico pero no se en donde dejarlo, que debo hacer con el?", fn() => new BotResponse("Puedes dejarlo en un punto limpio para reciclarlo!")),
@@ -135,7 +127,7 @@ class BotConversation extends Conversation
         );
 
         // Start with "name question"
-        $this->conversationFlow->start_flow($nameQuestion, $preguntasEmpresa);
+        $this->start_flow($nameQuestion, $preguntasEmpresa);
     }
 }
 
