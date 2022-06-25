@@ -18,6 +18,15 @@ class DemoConversations extends Conversation
      */
     protected $conversationFlow;
 
+    // Hello world
+    function hello_world_demo(){
+        $this->conversationFlow = new ConversationFlow($this);
+
+        $helloWorld = new BotResponse('Hello world');
+
+        $this->conversationFlow->start_flow($helloWorld);
+    }
+
     // Only code for demo
     function first_demo(){
         $this->conversationFlow = new ConversationFlow($this);
@@ -30,6 +39,7 @@ class DemoConversations extends Conversation
         $this->conversationFlow->start_flow($yourQuestion);
     }
 
+    // Buttons demo
     function buttons_demo(){
         $this->conversationFlow = new ConversationFlow($this);
 
@@ -44,6 +54,7 @@ class DemoConversations extends Conversation
         $this->conversationFlow->start_flow($yourQuestion);
     }
 
+    // Check correct answer demo
     function correct_answer_demo(){
         $this->conversationFlow = new ConversationFlow($this);
 
@@ -57,6 +68,7 @@ class DemoConversations extends Conversation
         $this->conversationFlow->start_flow($yourQuestion);
     }
 
+    // Update variables from Conversation (like "myVariable"):
     protected $myVariable = '';
     function update_variable_demo(){
         $this->conversationFlow = new ConversationFlow($this);
@@ -72,6 +84,7 @@ class DemoConversations extends Conversation
         $this->conversationFlow->start_flow($yourQuestion, $yourQuestion);
     }
 
+    // Use responses from anywhere. Functions, variables or classes
     function use_multiple_responses_demo(){
         $this->conversationFlow = new ConversationFlow($this);
 
@@ -105,7 +118,7 @@ class DemoConversations extends Conversation
     public function run()
     {
         // Execute function you want to run demo
-        $this->use_multiple_responses_demo();
+        $this->hello_world_demo();
         return;
     }
 }
