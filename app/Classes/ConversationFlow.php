@@ -113,6 +113,8 @@ class ConversationFlow{
             return $context->ask($question, function(Answer $answer) use ($thisContext, $botResponse, $rootResponseToUse, $rootContextToUse){
                 if(($botResponse->onAnswerCallback)($answer, $rootContextToUse, $this)){
                     // Answer is correct so continue or back to root response
+                     // Add selected button to responses array
+                    array_push($thisContext->responses, $answer->getText());
                     return $thisContext->create_question(
                         $this, 
                         ($botResponse->nextResponse) != null? 
@@ -123,8 +125,10 @@ class ConversationFlow{
                 }
                 
                 // If has error message, say error message
-                if($botResponse->errorMessage != null) $this->say($botResponse->errorMessage);
-
+                if($botResponse->errorMessage != null) {
+                    $this->say($botResponse->errorMessage);
+                    array_push($thisContext->responses, $botResponse->errorMessage);
+                }
                 // Display: Error custom response; repeat open question or back root response
                 return $thisContext->create_question(
                     $this, 
