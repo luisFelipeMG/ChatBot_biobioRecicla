@@ -104,6 +104,7 @@ class DemoConversations extends Conversation
      */
     public function run()
     {
+        // Execute function you want to run demo
         $this->use_multiple_responses_demo();
         return;
     }
