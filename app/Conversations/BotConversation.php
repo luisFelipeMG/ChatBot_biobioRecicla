@@ -56,19 +56,23 @@ class BotConversation extends Conversation
             ]))
         ], true);
 
+        // Create email question. Will be used only with consent
         $emailQuestion = new BotOpenQuestion(
             'Por último necesitamos su email',
+            // Check if answer is an email
             function(Answer $answer, $context){
                 if(\preg_match("/^(([^<>()\[\]\.,;:\s@\”]+(\.[^<>()\[\]\.,;:\s@\”]+)*)|(\”.+\”))@(([^<>()[\]\.,;:\s@\”]+\.)+[^<>()[\]\.,;:\s@\”]{2,})$/", $answer)){
                     $this->email = $answer->getText();
 
+                    // Get current used contact and update data
                     $currentContact = Contact::find($this->conversationFlow->get_contact()->id);
                     $currentContact->name = $this->firstname;
                     $currentContact->phone = $this->phone;
                     $currentContact->mail = $this->email;
 
+                    // Save new data
                     $currentContact->save();
-
+                    
                     $this->conversationFlow->set_log_anonymous(false);
                     return true;
                 } 
@@ -79,8 +83,10 @@ class BotConversation extends Conversation
             'El email debe estar en el formato de "tumail@dominio.com", intente de nuevo por favor'
         );
 
+        // Create phone question. Will be used only with consent
         $phoneQuestion = new BotOpenQuestion(
             'Cuál es su número de teléfono?',
+            // Check if answer is phone number
             function(Answer $answer, $context){
                 if(\preg_match("/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im", $answer)){
                     $this->phone = $answer->getText();
@@ -88,21 +94,27 @@ class BotConversation extends Conversation
                 } 
                 return false;
             },
+            // If is a phone number, go to "emailQuestion"
             $emailQuestion,
             null,
+            // When is not a phone number, display this error message
             'El número debe estar en el formato de "+56912345678", intente de nuevo por favor'
         );
 
+        // Create question: Is business?
         $businessQuestion = new BotResponse(
             'Es usted una persona natural o una empresa?',
             [
                 new ChatButton(
                     'Persona natural', 
+                    // Go to "preguntas natural"
                     fn() => $preguntasNatural,
                     fn() => $this->conversationFlow->set_user_section(HUMAN)
                 ),
                 new ChatButton(
                     'Empresa', 
+                    // If is business, then ask about consent. 
+                    // So if accepts, start with phone question. Otherwise, skip to "preguntasEmpresa"
                     fn() => new BotResponse(
                         $this->firstname.', esta usted de acuerdo con que nos proporcione su número de teléfono y email para que podamos contactarlo para una atención mas personalizada?',
                         [
@@ -115,6 +127,7 @@ class BotConversation extends Conversation
             ]
         );
 
+        // Create name question
         $nameQuestion = new BotOpenQuestion(
             'Cuál es su nombre?',
             function(Answer $answer, $context){
@@ -127,6 +140,7 @@ class BotConversation extends Conversation
             'Intente nuevamente'
         );
 
+        // Start with "name question"
         $this->conversationFlow->create_question($this, $nameQuestion, $preguntasEmpresa);
     }
 }
