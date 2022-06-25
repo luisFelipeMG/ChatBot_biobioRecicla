@@ -37,13 +37,45 @@ class ChatButton{
 }
 
 class BotOpenQuestion extends BotResponse{
+    /// SHOULD RETURN TRUE OR FALSE IF CAN CONTINUE
     public $onAnswerCallback;
 
-    function __construct(string $text, ?array $buttons = null, bool $saveLog = false, Closure $onAnswerCallback)
+    /**
+     * @var BotResponse
+     */
+    public $nextResponse;
+
+    /**
+     * @var BotResponse
+     */
+    public $errorResponse;
+
+    /**
+     * @var string
+     */
+    public $errorMessage;
+
+    /**
+     * @var bool
+     */
+    public $onErrorBackToRoot = false;
+
+    function __construct(
+        string $text, 
+        Closure $onAnswerCallback, 
+        ?BotResponse $nextResponse, 
+        ?BotResponse $errorResponse, 
+        ?string $errorMessage, 
+        bool $onErrorBackToRoot = false,
+        bool $saveLog = false
+    )
     {
         $this->text = $text;
         $this->saveLog = $saveLog;
-        $this->buttons = $buttons;
+        $this->nextResponse = $nextResponse;
+        $this->errorResponse = $errorResponse;
+        $this->errorMessage = $errorMessage;
+        $this->onErrorBackToRoot = $onErrorBackToRoot;
         $this->onAnswerCallback = $onAnswerCallback;
     }
 }
@@ -91,6 +123,28 @@ class ConversationFlow{
         if($botResponse->buttons == null){
             $context->say($botResponse->text);
             ConversationFlow::create_question($context, $rootResponse, $rootResponse);
+            return;
+        }
+
+        // Check if is open question
+        if($botResponse instanceof BotOpenQuestion){
+            $context->ask($botResponse->text, function(Answer $answer) use ($botResponse, $context, $rootResponse){
+                if(($botResponse->onAnswerCallback)($answer)){
+                    // Answer is correct so continue or back to root response
+                    ConversationFlow::create_question($context, $botResponse->nextResponse ?? $rootResponse, $rootResponse);
+                }
+                else{
+                    // If has error message, say error message
+                    if($botResponse->errorMessage != null) $context->say($botResponse->errorMessage);
+
+                    // Display: Error custom response; repeat open question or back root response
+                    ConversationFlow::create_question(
+                        $context, 
+                        $botResponse->errorResponse ?? $botResponse->onErrorBackToRoot? $rootResponse : $botResponse, 
+                        $rootResponse
+                    );
+                }
+            });
             return;
         }
 

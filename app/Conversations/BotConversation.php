@@ -197,6 +197,6 @@ class BotConversation extends Conversation
      */
     public function run()
     {
-        $this->askName();
+        //$this->askName();
     }
 }
