@@ -61,11 +61,14 @@ class BotConversation extends Conversation
             function(Answer $answer, $context){
                 if(\preg_match("/^(([^<>()\[\]\.,;:\s@\”]+(\.[^<>()\[\]\.,;:\s@\”]+)*)|(\”.+\”))@(([^<>()[\]\.,;:\s@\”]+\.)+[^<>()[\]\.,;:\s@\”]{2,})$/", $answer)){
                     $this->email = $answer->getText();
-                    $this->conversationFlow->set_contact(Contact::create([
-                        'name'=> $this->firstname,
-                        'phone'=> $this->phone,
-                        'mail'=> $this->email
-                    ]));
+
+                    $currentContact = Contact::find($this->conversationFlow->get_contact()->id);
+                    $currentContact->name = $this->firstname;
+                    $currentContact->phone = $this->phone;
+                    $currentContact->mail = $this->email;
+
+                    $currentContact->save();
+
                     $this->conversationFlow->set_log_anonymous(false);
                     return true;
                 } 

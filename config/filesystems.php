@@ -54,6 +54,24 @@ return [
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
         ],
+        'chatlogs' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/chatlogs'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'public',
+        ],
+        'chatlogs_contact' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/chatlogs/contacts'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'public',
+        ],
+        'chatlogs_anonymous' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/chatlogs/anonymous'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'public',
+        ],
 
         's3' => [
             'driver' => 's3',

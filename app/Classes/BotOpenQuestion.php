@@ -15,11 +15,6 @@ class BotOpenQuestion extends BotResponse{
     public $errorResponse;
 
     /**
-     * @var string
-     */
-    public $errorMessage;
-
-    /**
      * @var bool
      */
     public $onErrorBackToRoot = false;

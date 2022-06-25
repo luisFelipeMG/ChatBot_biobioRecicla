@@ -33,20 +33,27 @@ class ConversationFlow{
      */
     private $userSection;
 
+    public function __construct(bool $initLogAnonymous = true)
+    {
+        if($initLogAnonymous) $this->set_log_anonymous(true);
+    }
+
     // Setter for contact
-    public function set_contact(Contact $newContact){
+    protected function set_contact(Contact $newContact){
         $this->contact = $newContact;
     }
+
+    public function get_contact(){ return $this->contact; }
 
     // Setter for "logAnonymous"
     public function set_log_anonymous(bool $isAnonymous){
         $this->logAnonymous = $isAnonymous;
 
-        if($isAnonymous){
+        if($isAnonymous && $this->contact == null){
             $this->set_contact(Contact::create([
-                'name'=> $this->firstname,
-                'phone'=> $this->phone,
-                'mail'=> $this->email
+                'name'=> 'Anonymous',
+                'phone'=> '',
+                'mail'=> ''
             ]));
         }
     }
@@ -54,6 +61,11 @@ class ConversationFlow{
     // Setter for "userSection"
     public function set_user_section(int $newUserSection){
         $this->userSection = $newUserSection;
+    }
+
+    // Process chatbot button options
+    public function button_value_to_process($value){
+        return str_replace(',', '', preg_replace('/\s+/', '', strtolower($value)));
     }
 
     public function create_question($context, BotResponse $botResponse, ?BotResponse $rootResponse){        
@@ -100,12 +112,12 @@ class ConversationFlow{
                     $rootResponseToUse
                 );
                 
-            });
+            }, $botResponse->additionalParams);
         }
 
         // If buttons are null, so display bot response text and then display root response (it's like chatbot menu)
         if($botResponse->buttons == null){
-            $context->say($botResponse->text);
+            $context->say($botResponse->text, $botResponse->additionalParams);
 
             if($botResponse->nextResponse != null) return $this->create_question($context, $botResponse->nextResponse, $rootResponseToUse);
             if($rootResponseToUse != null) return $this->create_question($context, $rootResponseToUse, $rootResponseToUse);
@@ -120,36 +132,56 @@ class ConversationFlow{
         // Finally ask question and wait response
         $thisContext = $this;
         return $context->ask($question, function (Answer $answer) use ($thisContext, $context, $botResponse, $rootResponseToUse){
-            if ($answer->isInteractiveMessageReply()) {
+            $foundButtons = array();
 
+            if ($answer->isInteractiveMessageReply()) {
                 // Get selected pressed button
                 $foundButtons = array_filter($botResponse->buttons, function($value, $key)  use($answer){
                     return $value->text == $answer->getValue();
                 }, ARRAY_FILTER_USE_BOTH);
-
-                // Just check if selected button is found
-                if(count($foundButtons) > 0){
-                    // Get first found button 
-                    $foundButton = array_shift($foundButtons);
-                        
-                    // Add selected button to responses array
-                    array_push($thisContext->responses, $foundButton->text);
-
-                    // If response should be saved, so save conversation log
-                    if($botResponse->saveLog) $thisContext->save_conversation_log();
-
-                    // Execute custom on pressed from found button
-                    if($foundButton->onPressed != null) ($foundButton->onPressed)();
-
-                    // Then go to bot response from found button
-                    return $thisContext->create_question(
-                        $this, 
-                        $foundButton->createBotResponse != null? ($foundButton->createBotResponse)() : $foundButton->botResponse, 
-                        $rootResponseToUse
-                    );
-                }
             }
-        });
+            else {
+                // Get selected Typed button
+                $foundButtons = array_filter($botResponse->buttons, function($value, $key)  use($thisContext, $answer){
+                    return $thisContext->button_value_to_process($value->text) == $thisContext->button_value_to_process($answer->getText())
+                        || str_contains($thisContext->button_value_to_process($value->text), $thisContext->button_value_to_process($answer->getText()));
+                }, ARRAY_FILTER_USE_BOTH);
+            }
+
+            // Just check if selected button is found
+            if(count($foundButtons) <= 0 || count($foundButtons) > 1){
+                // If not found, display error message and repeat question
+                if($botResponse->errorMessage != null) 
+                    $this->say($botResponse->errorMessage, $botResponse->additionalParams);
+                else $this->say("'".$answer->getText()."' no lo entiendo. Intente nuevamente.", $botResponse->additionalParams);
+
+                return $thisContext->create_question(
+                    $this, 
+                    clone $botResponse, 
+                    $rootResponseToUse
+                );
+            }
+
+            // Get first found button 
+            $foundButton = array_shift($foundButtons); 
+
+            // Add selected button to responses array
+            array_push($thisContext->responses, $foundButton->text);
+
+            // If response should be saved, so save conversation log
+            if($botResponse->saveLog) $thisContext->save_conversation_log();
+
+            // Execute custom on pressed from found button
+            if($foundButton->onPressed != null) ($foundButton->onPressed)();
+
+            // Then go to bot response from found button
+            return $thisContext->create_question(
+                $this, 
+                $foundButton->createBotResponse != null? ($foundButton->createBotResponse)() : $foundButton->botResponse, 
+                $rootResponseToUse
+            );
+            
+        }, $botResponse->additionalParams);
     }
 
     public function save_conversation_log(){
@@ -168,8 +200,11 @@ class ConversationFlow{
         // Get prefix. Change if is anonymous or not
         $prefixToSave = $this->logAnonymous? 'conversation_log_anonymous' : 'conversation_log';
 
+        // Disk to use
+        $diskToUse = $this->logAnonymous? 'chatlogs_anonymous' : 'chatlogs_contact';
+
         // Finally put file in storage
-        Storage::disk('public')->put(
+        Storage::disk($diskToUse)->put(
             $prefixToSave.'_'.($this->contact != null? $this->contact->id : str_replace(':', '_', now())).'.json',
             $dataToSaveJson
         );

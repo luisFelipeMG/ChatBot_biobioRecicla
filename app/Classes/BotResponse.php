@@ -23,13 +23,25 @@ class BotResponse{          // Can be a question
      */
     public ?BotResponse $nextResponse = null;
 
+    /**
+     * @var string
+     */
+    public ?string $errorMessage = null;
+
+    /**
+     * @var array
+     */
+    public array $additionalParams = array();
+
     public function __construct(
         string $text, 
         ?array $buttons = null, 
         bool $saveLog = false, 
         ?BotResponse $nextResponse = null,
         bool $autoRoot = false,
-        ?BotResponse $customRootResponse = null
+        ?BotResponse $customRootResponse = null,
+        array $additionalParams = [],
+        string $errorMessage = null
     )
     {
         $this->text = $text;
@@ -38,6 +50,8 @@ class BotResponse{          // Can be a question
         $this->nextResponse = $nextResponse;
         $this->rootResponse = $customRootResponse;
         $this->autoRoot = $autoRoot;
+        $this->additionalParams = $additionalParams;
+        $this->errorMessage = $errorMessage;
     }
 
 }
