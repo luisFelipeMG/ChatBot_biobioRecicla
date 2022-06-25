@@ -3,10 +3,7 @@
 namespace App\Conversations;
 
 use App\Contact;
-use Illuminate\Foundation\Inspiring;
 use BotMan\BotMan\Messages\Incoming\Answer;
-use BotMan\BotMan\Messages\Outgoing\Question;
-use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 use BotMan\BotMan\Messages\Conversations\Conversation;
 
 use App\Classes\ConversationFlow;
@@ -35,7 +32,7 @@ class BotConversation extends Conversation
     public function run()
     {
         // Init conversation flow
-        $this->conversationFlow = new ConversationFlow();
+        $this->conversationFlow = new ConversationFlow($this);
         
         // Lista con preguntas persona natural
         $preguntasNatural = new BotResponse("Bienvenido! Qué desea saber?", [
@@ -72,7 +69,7 @@ class BotConversation extends Conversation
 
                     // Save new data
                     $currentContact->save();
-                    
+
                     $this->conversationFlow->set_log_anonymous(false);
                     return true;
                 } 
@@ -95,7 +92,7 @@ class BotConversation extends Conversation
                 return false;
             },
             // If is a phone number, go to "emailQuestion"
-            $emailQuestion,
+            fn() => $emailQuestion,
             null,
             // When is not a phone number, display this error message
             'El número debe estar en el formato de "+56912345678", intente de nuevo por favor'
@@ -115,8 +112,8 @@ class BotConversation extends Conversation
                     'Empresa', 
                     // If is business, then ask about consent. 
                     // So if accepts, start with phone question. Otherwise, skip to "preguntasEmpresa"
-                    fn() => new BotResponse(
-                        $this->firstname.', esta usted de acuerdo con que nos proporcione su número de teléfono y email para que podamos contactarlo para una atención mas personalizada?',
+                    fn($context) => new BotResponse(
+                        $context->firstname.', esta usted de acuerdo con que nos proporcione su número de teléfono y email para que podamos contactarlo para una atención mas personalizada?',
                         [
                             new ChatButton('Si, me parece bien', fn() => $phoneQuestion),
                             new ChatButton('No estoy de acuerdo', fn() => $preguntasEmpresa)
@@ -132,10 +129,14 @@ class BotConversation extends Conversation
             'Cuál es su nombre?',
             function(Answer $answer, $context){
                 $this->firstname = $answer->getText();
-                $context->say('Un placer conocerle '.$this->firstname);
                 return true;
             },
-            $businessQuestion,
+            fn($context) => new BotResponse(
+                'Un placer conocerle '.$context->firstname,
+                null,
+                false,
+                fn() => $businessQuestion
+            ),
             null,
             'Intente nuevamente'
         );

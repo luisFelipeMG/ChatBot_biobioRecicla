@@ -2,7 +2,6 @@
 
 namespace App\Classes;
 
-use App\Classes\BotResponse;
 use Closure;
 
 class ChatButton{

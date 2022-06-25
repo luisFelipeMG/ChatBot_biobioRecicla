@@ -2,6 +2,9 @@
 
 namespace App\Classes;
 
+use Closure;
+use Opis\Closure\SerializableClosure;
+
 class BotResponse{          // Can be a question
     public $text;
     public $buttons;        // nullable
@@ -19,9 +22,10 @@ class BotResponse{          // Can be a question
     public ?BotResponse $rootResponse = null;
 
     /**
-     * @var ?BotResponse
+     * Should return Bot Response
+     * @var ?SerializableClosure
      */
-    public ?BotResponse $nextResponse = null;
+    public $nextResponse = null;
 
     /**
      * @var string
@@ -37,7 +41,7 @@ class BotResponse{          // Can be a question
         string $text, 
         ?array $buttons = null, 
         bool $saveLog = false, 
-        ?BotResponse $nextResponse = null,
+        ?Closure $nextResponse = null,
         bool $autoRoot = false,
         ?BotResponse $customRootResponse = null,
         array $additionalParams = [],
@@ -47,7 +51,9 @@ class BotResponse{          // Can be a question
         $this->text = $text;
         $this->saveLog = $saveLog;
         $this->buttons = $buttons;
-        $this->nextResponse = $nextResponse;
+        if($nextResponse != null)
+            $this->nextResponse = new SerializableClosure($nextResponse);
+        else $this->nextResponse = null;
         $this->rootResponse = $customRootResponse;
         $this->autoRoot = $autoRoot;
         $this->additionalParams = $additionalParams;

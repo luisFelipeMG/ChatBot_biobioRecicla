@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Log;
 
 class ConversationFlow{
 
+    // RootContext
+    public $rootContext;
+
     // Saved responses
     public $responses = array();
 
@@ -33,8 +36,9 @@ class ConversationFlow{
      */
     private $userSection;
 
-    public function __construct(bool $initLogAnonymous = true)
+    public function __construct($rootContext, bool $initLogAnonymous = true)
     {
+        $this->rootContext = $rootContext;
         if($initLogAnonymous) $this->set_log_anonymous(true);
     }
 
@@ -94,12 +98,18 @@ class ConversationFlow{
                 ->fallback('Unable to ask question')
                 ->callbackId('ask_open');
 
-            return $context->ask($question, function(Answer $answer) use ($thisContext, $botResponse, $context, $rootResponseToUse){
+            $rootContextToUse = $this->rootContext;
+
+            return $context->ask($question, function(Answer $answer) use ($thisContext, $botResponse, $rootResponseToUse, $rootContextToUse){
                 if(($botResponse->onAnswerCallback)($answer, $this)){
-                    //if($context == null) return;
                     // Answer is correct so continue or back to root response
-                    $thisContext->create_question($this, $botResponse->nextResponse ?? $rootResponseToUse, $rootResponseToUse);
-                    return;
+                    return $thisContext->create_question(
+                        $this, 
+                        ($botResponse->nextResponse) != null? 
+                            ($botResponse->nextResponse)($rootContextToUse) 
+                            : $rootResponseToUse, 
+                        $rootResponseToUse
+                    );
                 }
                 
                 // If has error message, say error message
@@ -119,7 +129,7 @@ class ConversationFlow{
         if($botResponse->buttons == null){
             $context->say($botResponse->text, $botResponse->additionalParams);
 
-            if($botResponse->nextResponse != null) return $this->create_question($context, $botResponse->nextResponse, $rootResponseToUse);
+            if($botResponse->nextResponse != null) return $this->create_question($context, ($botResponse->nextResponse)($this->rootContext), $rootResponseToUse);
             if($rootResponseToUse != null) return $this->create_question($context, $rootResponseToUse, $rootResponseToUse);
         }
 
@@ -131,7 +141,8 @@ class ConversationFlow{
 
         // Finally ask question and wait response
         $thisContext = $this;
-        return $context->ask($question, function (Answer $answer) use ($thisContext, $context, $botResponse, $rootResponseToUse){
+        $rootContextToUse = $this->rootContext;
+        return $context->ask($question, function (Answer $answer) use ($thisContext, $context, $botResponse, $rootResponseToUse, $rootContextToUse){
             $foundButtons = array();
 
             if ($answer->isInteractiveMessageReply()) {
@@ -177,7 +188,7 @@ class ConversationFlow{
             // Then go to bot response from found button
             return $thisContext->create_question(
                 $this, 
-                $foundButton->createBotResponse != null? ($foundButton->createBotResponse)() : $foundButton->botResponse, 
+                $foundButton->createBotResponse != null? ($foundButton->createBotResponse)($rootContextToUse) : $foundButton->botResponse, 
                 $rootResponseToUse
             );
             
