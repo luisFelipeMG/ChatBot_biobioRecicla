@@ -82,7 +82,11 @@ class ConversationFlow{
         return str_replace(',', '', preg_replace('/\s+/', '', strtolower($value)));
     }
 
-    public function create_question($context, BotResponse $botResponse, ?BotResponse $rootResponse){        
+    public function start_flow(BotResponse $botResponse, ?BotResponse $rootResponse = null){
+        $this->create_question($this->rootContext, $botResponse, $rootResponse);
+    }
+
+    public function create_question($context, BotResponse $botResponse, ?BotResponse $rootResponse = null){        
         // Context is required
         if($context == null) return;
         if($context->getBot() == null) return;
@@ -115,13 +119,21 @@ class ConversationFlow{
                     // Answer is correct so continue or back to root response
                      // Add selected button to responses array
                     array_push($thisContext->responses, $answer->getText());
-                    return $thisContext->create_question(
-                        $this, 
-                        ($botResponse->nextResponse) != null? 
-                            ($botResponse->nextResponse)($answer, $rootContextToUse) 
-                            : $rootResponseToUse, 
-                        $rootResponseToUse
-                    );
+
+                    if($rootResponseToUse != null)
+                        return $thisContext->create_question(
+                            $this, 
+                            ($botResponse->nextResponse) != null? 
+                                ($botResponse->nextResponse)($answer, $rootContextToUse) 
+                                : $rootResponseToUse, 
+                            $rootResponseToUse
+                        );
+                    else if(($botResponse->nextResponse) != null)
+                        return $thisContext->create_question(
+                            $this, 
+                            ($botResponse->nextResponse)($answer, $rootContextToUse),
+                            $rootResponseToUse
+                        );
                 }
                 
                 // If has error message, say error message
@@ -130,11 +142,18 @@ class ConversationFlow{
                     array_push($thisContext->responses, $botResponse->errorMessage);
                 }
                 // Display: Error custom response; repeat open question or back root response
-                return $thisContext->create_question(
-                    $this, 
-                    $botResponse->errorResponse ?? $botResponse->onErrorBackToRoot? $rootResponseToUse : $botResponse, 
-                    $rootResponseToUse
-                );
+                if($rootResponseToUse != null)
+                    return $thisContext->create_question(
+                        $this, 
+                        $botResponse->errorResponse ?? $botResponse->onErrorBackToRoot? $rootResponseToUse : $botResponse, 
+                        $rootResponseToUse
+                    );
+                else
+                    return $thisContext->create_question(
+                        $this, 
+                        $botResponse->errorResponse ?? $botResponse, 
+                        $rootResponseToUse
+                    );
                 
             }, $botResponse->additionalParams);
         }
@@ -145,6 +164,7 @@ class ConversationFlow{
 
             if($botResponse->nextResponse != null) return $this->create_question($context, ($botResponse->nextResponse)($this->rootContext), $rootResponseToUse);
             if($rootResponseToUse != null) return $this->create_question($context, $rootResponseToUse, $rootResponseToUse);
+            return;
         }
 
         // If there are buttons, so create question

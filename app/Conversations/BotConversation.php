@@ -25,12 +25,28 @@ class BotConversation extends Conversation
      */
     protected $conversationFlow;
 
+    // Only code for demo
+    function demo(){
+        $this->conversationFlow = new ConversationFlow($this);
+
+        $firstQuestion = new BotOpenQuestion(
+            'Cuál es su edad?',
+            fn(Answer $answer) => new BotResponse('Tu edad es '.$answer->getText())
+        );
+
+        $this->conversationFlow->start_flow($firstQuestion);
+    }
     
     /**
      * Start the conversation
      */
     public function run()
     {
+
+        // IF YOU WANT TO RUN DEMO, UNCOMMENT THESE TWO LINES:
+        //$this->demo();
+        //return;
+
         // Init conversation flow
         $this->conversationFlow = new ConversationFlow($this);
         
@@ -136,7 +152,7 @@ class BotConversation extends Conversation
         );
 
         // Start with "name question"
-        $this->conversationFlow->create_question($this, $nameQuestion, $preguntasEmpresa);
+        $this->conversationFlow->start_flow($nameQuestion, $preguntasEmpresa);
     }
 }
 
