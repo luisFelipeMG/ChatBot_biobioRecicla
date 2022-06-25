@@ -39,21 +39,20 @@ class BotConversation extends Conversation
         
         // Lista con preguntas persona natural
         $preguntasNatural = new BotResponse("Bienvenido! Qué desea saber?", [
-            new ChatButton("Tengo bastante plastico pero no se en donde dejarlo, que debo hacer con el?", new BotResponse("Puedes dejarlo en un punto limpio para reciclarlo!")),
-
-        ], true);
+            new ChatButton("Tengo bastante plastico pero no se en donde dejarlo, que debo hacer con el?", fn() => new BotResponse("Puedes dejarlo en un punto limpio para reciclarlo!")),
+        ], true, null, true);
 
         // Lista con preguntas principales empresa
         $preguntasEmpresa = new BotResponse("Bienvenido! Qué desea saber?", [
-            new ChatButton("¿En que consiste la empresa?", new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
+            new ChatButton("¿En que consiste la empresa?", fn() => new BotResponse("Somos una empresa que busca mantener una relación armónica entre las personas, 
             la sociedad y la naturaleza, para contribuir a una mejor calidad de vida.")),
-            new ChatButton("¿Qué tipo de servicios ofrecen?", new BotResponse("Brindamos soluciones ambientales, para la gestión integral de residuos.")),
-            new ChatButton("Desea cotizar algun servicio que ofrecemos?", new BotResponse("OK! Qué servicio desea cotizar?",[
-                new ChatButton("Gestión de residuos", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
-                new ChatButton("Puntos limpios", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
-                new ChatButton("Consultoría", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
-                new ChatButton("Educación Ambiental", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
-                new ChatButton("Biciclaje", new BotResponse("Ingrese a este link: https://biobiorecicla.cl/conciencia-ambiental/", null, true))
+            new ChatButton("¿Qué tipo de servicios ofrecen?", fn() => new BotResponse("Brindamos soluciones ambientales, para la gestión integral de residuos.")),
+            new ChatButton("Desea cotizar algun servicio que ofrecemos?", fn() => new BotResponse("OK! Qué servicio desea cotizar?",[
+                new ChatButton("Gestión de residuos", fn() => new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
+                new ChatButton("Puntos limpios", fn() => new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
+                new ChatButton("Consultoría", fn() => new BotResponse("Ingrese a este link: https://biobiorecicla.cl/cotizacion-empresas-instituciones/", null, true)),
+                new ChatButton("Educación Ambiental", fn() => new BotResponse("Ingrese a este link: https://biobiorecicla.cl/condominios-comunidades/", null, true)),
+                new ChatButton("Biciclaje", fn() => new BotResponse("Ingrese a este link: https://biobiorecicla.cl/conciencia-ambiental/", null, true))
             ]))
         ], true);
 
@@ -94,17 +93,21 @@ class BotConversation extends Conversation
         $businessQuestion = new BotResponse(
             'Es usted una persona natural o una empresa?',
             [
-                new ChatButton('Persona natural', $preguntasNatural),
+                new ChatButton(
+                    'Persona natural', 
+                    fn() => $preguntasNatural,
+                    fn() => $this->conversationFlow->set_user_section(HUMAN)
+                ),
                 new ChatButton(
                     'Empresa', 
-                    null, 
                     fn() => new BotResponse(
                         $this->firstname.', esta usted de acuerdo con que nos proporcione su número de teléfono y email para que podamos contactarlo para una atención mas personalizada?',
                         [
-                            new ChatButton('Si, me parece bien', $phoneQuestion),
-                            new ChatButton('No estoy de acuerdo', $preguntasEmpresa)
+                            new ChatButton('Si, me parece bien', fn() => $phoneQuestion),
+                            new ChatButton('No estoy de acuerdo', fn() => $preguntasEmpresa)
                         ]
-                    )
+                    ),
+                    fn() => $this->conversationFlow->set_user_section(BUSINESS)
                 )
             ]
         );

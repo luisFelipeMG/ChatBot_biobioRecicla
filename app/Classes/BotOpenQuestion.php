@@ -12,11 +12,6 @@ class BotOpenQuestion extends BotResponse{
     /**
      * @var BotResponse
      */
-    public $nextResponse;
-
-    /**
-     * @var BotResponse
-     */
     public $errorResponse;
 
     /**

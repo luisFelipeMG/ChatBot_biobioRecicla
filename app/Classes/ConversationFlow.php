@@ -41,6 +41,14 @@ class ConversationFlow{
     // Setter for "logAnonymous"
     public function set_log_anonymous(bool $isAnonymous){
         $this->logAnonymous = $isAnonymous;
+
+        if($isAnonymous){
+            $this->set_contact(Contact::create([
+                'name'=> $this->firstname,
+                'phone'=> $this->phone,
+                'mail'=> $this->email
+            ]));
+        }
     }
 
     // Setter for "userSection"
@@ -58,6 +66,14 @@ class ConversationFlow{
         
         // If should save log, save conversation log
         if($botResponse->saveLog) $this->save_conversation_log();
+
+        // Set root response to same bot response if auto root is true
+        if($botResponse->autoRoot) $botResponse->rootResponse = clone $botResponse;
+        // Set root response to bot response, ONLY if bot response hasn't root response
+        else if($botResponse->rootResponse == null) $botResponse->rootResponse = $rootResponse;
+
+        // Only declare root response to use
+        $rootResponseToUse = $botResponse->rootResponse;
         
         // Check if is open question
         if($botResponse instanceof BotOpenQuestion){
@@ -66,11 +82,11 @@ class ConversationFlow{
                 ->fallback('Unable to ask question')
                 ->callbackId('ask_open');
 
-            return $context->ask($question, function(Answer $answer) use ($thisContext, $botResponse, $context, $rootResponse){
+            return $context->ask($question, function(Answer $answer) use ($thisContext, $botResponse, $context, $rootResponseToUse){
                 if(($botResponse->onAnswerCallback)($answer, $this)){
                     //if($context == null) return;
                     // Answer is correct so continue or back to root response
-                    $thisContext->create_question($this, $botResponse->nextResponse ?? $rootResponse, $rootResponse);
+                    $thisContext->create_question($this, $botResponse->nextResponse ?? $rootResponseToUse, $rootResponseToUse);
                     return;
                 }
                 
@@ -80,8 +96,8 @@ class ConversationFlow{
                 // Display: Error custom response; repeat open question or back root response
                 return $thisContext->create_question(
                     $this, 
-                    $botResponse->errorResponse ?? $botResponse->onErrorBackToRoot? $rootResponse : $botResponse, 
-                    $rootResponse
+                    $botResponse->errorResponse ?? $botResponse->onErrorBackToRoot? $rootResponseToUse : $botResponse, 
+                    $rootResponseToUse
                 );
                 
             });
@@ -91,7 +107,8 @@ class ConversationFlow{
         if($botResponse->buttons == null){
             $context->say($botResponse->text);
 
-            if($rootResponse != null) return $this->create_question($context, $rootResponse, $rootResponse);
+            if($botResponse->nextResponse != null) return $this->create_question($context, $botResponse->nextResponse, $rootResponseToUse);
+            if($rootResponseToUse != null) return $this->create_question($context, $rootResponseToUse, $rootResponseToUse);
         }
 
         // If there are buttons, so create question
@@ -102,7 +119,7 @@ class ConversationFlow{
 
         // Finally ask question and wait response
         $thisContext = $this;
-        return $context->ask($question, function (Answer $answer) use ($thisContext, $context, $botResponse, $rootResponse){
+        return $context->ask($question, function (Answer $answer) use ($thisContext, $context, $botResponse, $rootResponseToUse){
             if ($answer->isInteractiveMessageReply()) {
 
                 // Get selected pressed button
@@ -121,11 +138,14 @@ class ConversationFlow{
                     // If response should be saved, so save conversation log
                     if($botResponse->saveLog) $thisContext->save_conversation_log();
 
+                    // Execute custom on pressed from found button
+                    if($foundButton->onPressed != null) ($foundButton->onPressed)();
+
                     // Then go to bot response from found button
                     return $thisContext->create_question(
                         $this, 
                         $foundButton->createBotResponse != null? ($foundButton->createBotResponse)() : $foundButton->botResponse, 
-                        $rootResponse
+                        $rootResponseToUse
                     );
                 }
             }

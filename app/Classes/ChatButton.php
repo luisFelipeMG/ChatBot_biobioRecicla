@@ -15,10 +15,20 @@ class ChatButton{
      */
     public $createBotResponse;
 
-    public function __construct(string $text, ?BotResponse $botResponse = null, ?Closure $createBotResponse = null)
+    /**
+     * Called on button pressed
+     * @var Closure
+     */
+    public $onPressed;
+
+    public function __construct(
+        string $text, 
+        Closure $createBotResponse, 
+        ?Closure $onPressed = null
+    )
     {
         $this->text = $text;
-        $this->botResponse = $botResponse;
         $this->createBotResponse = $createBotResponse;
+        $this->onPressed = $onPressed;
     }
 }
