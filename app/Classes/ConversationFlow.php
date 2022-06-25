@@ -121,8 +121,12 @@ class ConversationFlow{
                     // If response should be saved, so save conversation log
                     if($botResponse->saveLog) $thisContext->save_conversation_log();
 
-                    // Then back to root response
-                    return $thisContext->create_question($this, $foundButton->botResponse, $rootResponse);
+                    // Then go to bot response from found button
+                    return $thisContext->create_question(
+                        $this, 
+                        $foundButton->createBotResponse != null? ($foundButton->createBotResponse)() : $foundButton->botResponse, 
+                        $rootResponse
+                    );
                 }
             }
         });

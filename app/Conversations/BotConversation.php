@@ -91,19 +91,21 @@ class BotConversation extends Conversation
             'El número debe estar en el formato de "+56912345678", intente de nuevo por favor'
         );
 
-        $consentQuestion = new BotResponse(
-            $this->firstname.', esta usted de acuerdo con que nos proporcione su número de teléfono y email para que podamos contactarlo para una atención mas personalizada?',
-            [
-                new ChatButton('Si, me parece bien', $phoneQuestion),
-                new ChatButton('No estoy de acuerdo', $preguntasEmpresa)
-            ]
-        );
-
         $businessQuestion = new BotResponse(
             'Es usted una persona natural o una empresa?',
             [
                 new ChatButton('Persona natural', $preguntasNatural),
-                new ChatButton('Empresa', $consentQuestion)
+                new ChatButton(
+                    'Empresa', 
+                    null, 
+                    fn() => new BotResponse(
+                        $this->firstname.', esta usted de acuerdo con que nos proporcione su número de teléfono y email para que podamos contactarlo para una atención mas personalizada?',
+                        [
+                            new ChatButton('Si, me parece bien', $phoneQuestion),
+                            new ChatButton('No estoy de acuerdo', $preguntasEmpresa)
+                        ]
+                    )
+                )
             ]
         );
 
