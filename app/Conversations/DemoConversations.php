@@ -13,10 +13,6 @@ use App\Classes\ChatButton;
 
 class DemoConversations extends Conversation
 {
-    protected $firstname;
-    protected $phone;
-    protected $email;
-
     /**
      * @var ConversationFlow
      */
