@@ -22,10 +22,10 @@ class BotOpenQuestion extends BotResponse{
 
     public function __construct(
         string $text, 
-        Closure $onAnswerCallback, 
         ?Closure $nextResponse = null, 
-        ?BotResponse $errorResponse = null, 
         ?string $errorMessage = null, 
+        ?Closure $onAnswerCallback = null, 
+        ?BotResponse $errorResponse = null, 
         bool $onErrorBackToRoot = false,
         bool $saveLog = false
     )
@@ -38,6 +38,6 @@ class BotOpenQuestion extends BotResponse{
         $this->errorResponse = $errorResponse;
         $this->errorMessage = $errorMessage;
         $this->onErrorBackToRoot = $onErrorBackToRoot;
-        $this->onAnswerCallback = $onAnswerCallback;
+        $this->onAnswerCallback = $onAnswerCallback ?? fn() => true;
     }
 }

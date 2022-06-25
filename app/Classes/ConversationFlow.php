@@ -49,6 +49,16 @@ class ConversationFlow{
 
     public function get_contact(){ return $this->contact; }
 
+    public function update_contact(string $firstname, $phone, $email, $updateAnonymous = false){
+        $this->contact->name = $firstname;
+        $this->contact->phone = $phone;
+        $this->contact->mail = $email;
+
+        $this->contact->save();
+
+        if($updateAnonymous) $this->set_log_anonymous(false);
+    }
+
     // Setter for "logAnonymous"
     public function set_log_anonymous(bool $isAnonymous){
         $this->logAnonymous = $isAnonymous;
@@ -101,12 +111,12 @@ class ConversationFlow{
             $rootContextToUse = $this->rootContext;
 
             return $context->ask($question, function(Answer $answer) use ($thisContext, $botResponse, $rootResponseToUse, $rootContextToUse){
-                if(($botResponse->onAnswerCallback)($answer, $this)){
+                if(($botResponse->onAnswerCallback)($answer, $rootContextToUse, $this)){
                     // Answer is correct so continue or back to root response
                     return $thisContext->create_question(
                         $this, 
                         ($botResponse->nextResponse) != null? 
-                            ($botResponse->nextResponse)($rootContextToUse) 
+                            ($botResponse->nextResponse)($answer, $rootContextToUse) 
                             : $rootResponseToUse, 
                         $rootResponseToUse
                     );
