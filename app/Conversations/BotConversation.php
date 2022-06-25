@@ -8,41 +8,7 @@ use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Outgoing\Question;
 use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 use BotMan\BotMan\Messages\Conversations\Conversation;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 
-class BotResponse{ // Can be a question
-    public $text;
-    public $buttons;    // nullable
-    public $save;       // true - false / Save history
-
-    function __construct(string $text, ?array $buttons = null, bool $save = false)
-    {
-        $this->text = $text;
-        $this->save = $save;
-        $this->buttons = $buttons;
-    }
-}
-
-class HumanResponse{
-    public $text;
-    public $usedButton; // nullable
-}
-
-class ChatButton{
-    public $text;
-    public $botResponse;
-
-    function __construct(string $text, BotResponse $botResponse)
-    {
-        $this->text = $text;
-        $this->botResponse = $botResponse;
-    }
-}
-
-class ChatReady{
-    public $ready = true;
-}
 
 class BotConversation extends Conversation
 {
@@ -56,11 +22,6 @@ class BotConversation extends Conversation
 
     protected $click1;
 
-    protected $Responses = array();
-
-    protected $Preguntas;
-
-    protected $Bot_responses;
     public function askName()
     {
         $this->ask('Hola! Cual es su nombre? Para dirigirme a usted.', function(Answer $answer) {
@@ -230,53 +191,9 @@ class BotConversation extends Conversation
     }
     
 
-    public function create_question(BotResponse $botResponse, BotResponse $rootResponse, $bool){
-        array_push($this->Responses, $botResponse->text);
-        if($botResponse->save) $this->save_history($bool);
+    
 
-        if($botResponse->buttons == null){
-            $this->say($botResponse->text);
-            $this->create_question($rootResponse, $rootResponse, $bool);
-            return;
-        }        
-
-        $question = Question::create($botResponse->text)//le preguntamos al usuario que quiere saber
-            ->fallback('Unable to ask question')
-            ->callbackId('ask_reason')
-            ->addButtons(array_map( function($value){ return Button::create($value->text)->value($value->text);}, $botResponse->buttons ));
-        //array_push($this->Responses, $botResponse->text);
-
-        return $this->ask($question, function (Answer $answer) use ($botResponse, $rootResponse, $bool){
-            if ($answer->isInteractiveMessageReply()) {
-
-                $foundButtons = array_filter($botResponse->buttons, function($value, $key)  use($answer){
-                    return $value->text == $answer->getValue();
-                }, ARRAY_FILTER_USE_BOTH);
-
-                if(count($foundButtons) > 0){
-                    $foundButton = array_shift($foundButtons);
-                        
-                    array_push($this->Responses, $foundButton->text);
-                    if($botResponse->save) $this->save_history($bool);
-                    $this->create_question($foundButton->botResponse, $rootResponse, $bool);
-                }
-            }
-        });
-    }
-
-    public function save_history($bool){
-        if($bool == 0){
-            $contactos = json_decode($this->contacto, true);
-            $array_merge = array_merge($this->Responses, $contactos);
-            $Responsejson = json_encode($array_merge);
-            Storage::disk('public')->put('history '.$this->contacto->id.'.json', $Responsejson);
-        }else{
-            $contactoss = json_decode($this->contacto, true);
-            $array_merge = array_merge($this->Responses, $contactoss);
-            $Responsejson = json_encode($array_merge);
-            Storage::disk('public')->put('history anonymous '.$this->contacto->id.'.json', $Responsejson);
-        }
-    }
+    
 
     /*public function create_question($preguntita, $respuestita){
         $question = Question::create($preguntita)//le preguntamos al usuario que quiere saber
