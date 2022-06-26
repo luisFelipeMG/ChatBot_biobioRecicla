@@ -49,8 +49,8 @@ class DemoConversations extends BaseFlowConversation
         $yourQuestion = new BotOpenQuestion(
             'Cuánto es 2+2?',
             fn() => new BotResponse('Correcto!'),
+            fn(Answer $answer) => str_replace(' ', '', $answer->getText()) == '4',
             'Estás seguro?',
-            fn(Answer $answer) => str_replace(' ', '', $answer->getText()) == '4' 
         );
 
         $this->start_flow($yourQuestion);
@@ -96,6 +96,8 @@ class DemoConversations extends BaseFlowConversation
     }
     function third_question_for_demo() { return new BotResponse('Genial! Muchas gracias por responder la encuesta'); }
     
+
+
     /**
      * Start the conversation
      */

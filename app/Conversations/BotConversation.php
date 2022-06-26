@@ -48,7 +48,6 @@ class BotConversation extends BaseFlowConversation
         $emailQuestion = new BotOpenQuestion(
             'Por último necesitamos su email',
             null,
-            'El email debe estar en el formato de "tumail@dominio.com", intente de nuevo por favor',
             // Check if answer is an email
             function(Answer $answer, $context){
                 if(\preg_match("/^(([^<>()\[\]\.,;:\s@\”]+(\.[^<>()\[\]\.,;:\s@\”]+)*)|(\”.+\”))@(([^<>()[\]\.,;:\s@\”]+\.)+[^<>()[\]\.,;:\s@\”]{2,})$/", $answer)){
@@ -65,7 +64,8 @@ class BotConversation extends BaseFlowConversation
                     return true;
                 } 
                 return false;
-            },            
+            },
+            'El email debe estar en el formato de "tumail@dominio.com", intente de nuevo por favor',            
         );
 
         // Create phone question. Will be used only with consent
@@ -73,8 +73,6 @@ class BotConversation extends BaseFlowConversation
             'Cuál es su número de teléfono?',
             // If is a phone number, go to "emailQuestion"
             fn() => $emailQuestion,
-            // When is not a phone number, display this error message
-            'El número debe estar en el formato de "+56912345678", intente de nuevo por favor',
             // Check if answer is phone number
             function(Answer $answer, $context){
                 if(\preg_match("/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im", $answer)){
@@ -82,7 +80,9 @@ class BotConversation extends BaseFlowConversation
                     return true;
                 } 
                 return false;
-            }
+            },
+            // When is not a phone number, display this error message
+            'El número debe estar en el formato de "+56912345678", intente de nuevo por favor',
         );
 
         // Create question: Is business?
@@ -122,8 +122,7 @@ class BotConversation extends BaseFlowConversation
                     false,
                     fn() => $businessQuestion
                 );
-            },
-            'Intente nuevamente'
+            }
         );
 
         // Start with "name question"

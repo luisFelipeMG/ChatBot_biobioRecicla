@@ -23,8 +23,8 @@ class BotOpenQuestion extends BotResponse{
     public function __construct(
         string $text, 
         ?Closure $nextResponse = null, 
-        ?string $errorMessage = null, 
         ?Closure $onAnswerCallback = null, 
+        ?string $errorMessage = null, 
         ?BotResponse $errorResponse = null, 
         bool $onErrorBackToRoot = false,
         bool $saveLog = false
